@@ -1,0 +1,38 @@
+.history-filters {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.history-filters select {
+  background: #1e2435;
+  border: 1px solid #2d3348;
+  border-radius: 8px;
+  color: #fff;
+  padding: 10px 14px;
+  font-size: 0.875rem;
+  outline: none;
+  min-width: 180px;
+}
+
+.history-filters select:focus {
+  border-color: #6c63ff;
+}
+
+.model-badge {
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.model-badge.lstm {
+  background: rgba(108,99,255,0.15);
+  color: #6c63ff;
+}
+
+.model-badge.gru {
+  background: rgba(16,185,129,0.15);
+  color: #10b981;
+}

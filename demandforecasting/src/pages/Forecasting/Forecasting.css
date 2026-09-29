@@ -1,0 +1,143 @@
+.forecasting-layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.forecast-controls {
+  background: #1e2435;
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: sticky;
+  top: 20px;
+}
+
+.forecast-controls h3 {
+  color: #fff;
+  margin: 0;
+  font-size: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  color: #8892a4;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.form-group select, .form-group input[type="range"] {
+  background: #252b3b;
+  border: 1px solid #2d3348;
+  border-radius: 8px;
+  color: #fff;
+  padding: 10px 12px;
+  font-size: 0.875rem;
+  outline: none;
+  width: 100%;
+}
+
+.form-group select:focus {
+  border-color: #6c63ff;
+}
+
+.model-toggle {
+  display: flex;
+  gap: 8px;
+}
+
+.toggle-btn {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #2d3348;
+  background: #252b3b;
+  color: #8892a4;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.toggle-btn.active {
+  background: #6c63ff;
+  border-color: #6c63ff;
+  color: #fff;
+}
+
+.forecast-results {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.metrics-card {
+  background: #1e2435;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.metrics-title {
+  color: #fff;
+  font-size: 0.95rem;
+  margin: 0 0 16px 0;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.metric-item {
+  background: #252b3b;
+  border-radius: 8px;
+  padding: 14px;
+  border-top: 2px solid;
+  text-align: center;
+}
+
+.metric-label {
+  display: block;
+  color: #8892a4;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.metric-value {
+  display: block;
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.empty-state {
+  background: #1e2435;
+  border-radius: 12px;
+  padding: 60px;
+  text-align: center;
+  color: #8892a4;
+}
+
+.error-msg {
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.2);
+  color: #ef4444;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 900px) {
+  .forecasting-layout { grid-template-columns: 1fr; }
+  .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+}
