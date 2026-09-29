@@ -1,0 +1,33 @@
+# React
+demandforecasting/node_modules/
+demandforecasting/dist/
+demandforecasting/build/
+
+# Python
+backend/venv/
+backend/__pycache__/
+**/__pycache__/
+*.pyc
+
+# Environment
+.env
+*.env
+
+# Uploaded files
+backend/uploads/
+uploads/
+
+# ML generated files
+backend/trained_models/*.keras
+backend/trained_models/*.h5
+*.pkl
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
