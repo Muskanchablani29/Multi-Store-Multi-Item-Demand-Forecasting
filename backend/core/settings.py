@@ -60,7 +60,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'demand_forecasting',
         'USER': 'root',
-        'PASSWORD': '',
+        'PASSWORD': 'muskan123',
         'HOST': 'localhost',
         'PORT': '3306',
     }
