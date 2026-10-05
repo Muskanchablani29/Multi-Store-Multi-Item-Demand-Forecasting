@@ -1,16 +1,17 @@
 from rest_framework import serializers
 from .models import Inventory
 
+
 class InventorySerializer(serializers.ModelSerializer):
-    shop_name = serializers.CharField(source='shop.name', read_only=True)
-    product_name = serializers.CharField(source='product.name', read_only=True)
-    category = serializers.CharField(source='product.category', read_only=True)
-    brand = serializers.CharField(source='product.brand', read_only=True)
-    needs_reorder = serializers.SerializerMethodField()
+    shop_name        = serializers.CharField(source='shop.name',            read_only=True)
+    product_name     = serializers.CharField(source='product.name',         read_only=True)
+    category         = serializers.CharField(source='product.category',     read_only=True)
+    brand            = serializers.CharField(source='product.brand',        read_only=True)
+    needs_reorder    = serializers.SerializerMethodField()
     inventory_status = serializers.SerializerMethodField()
 
     class Meta:
-        model = Inventory
+        model  = Inventory
         fields = '__all__'
 
     def get_needs_reorder(self, obj):

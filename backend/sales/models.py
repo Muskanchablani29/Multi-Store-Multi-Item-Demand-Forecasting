@@ -26,6 +26,12 @@ class Sale(models.Model):
 
     class Meta:
         ordering = ['date']
+        indexes = [
+            models.Index(fields=['shop', 'product', 'date']),
+            models.Index(fields=['date']),
+            models.Index(fields=['shop']),
+            models.Index(fields=['product']),
+        ]
 
     def __str__(self):
         return f"{self.shop} - {self.product} - {self.date}"

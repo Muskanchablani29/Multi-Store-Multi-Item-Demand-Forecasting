@@ -1,5 +1,5 @@
-import { NavLink, useNavigate } from 'react-router-dom';
-import { FiBarChart2, FiUpload, FiTrendingUp, FiActivity, FiPackage, FiClock, FiLogOut, FiShoppingBag } from 'react-icons/fi';
+import { NavLink } from 'react-router-dom';
+import { FiBarChart2, FiUpload, FiTrendingUp, FiActivity, FiPackage, FiClock, FiShoppingBag } from 'react-icons/fi';
 import './Sidebar.css';
 
 const links = [
@@ -13,15 +13,6 @@ const links = [
 ];
 
 export default function Sidebar() {
-  const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    navigate('/login');
-  };
-
   return (
     <nav className="sidebar">
       <div className="sidebar-brand">
@@ -37,12 +28,6 @@ export default function Sidebar() {
           </li>
         ))}
       </ul>
-      <div className="sidebar-footer">
-        <span className="sidebar-user">{user.username || 'User'}</span>
-        <button className="logout-btn" onClick={handleLogout}>
-          <FiLogOut /> Logout
-        </button>
-      </div>
     </nav>
   );
 }

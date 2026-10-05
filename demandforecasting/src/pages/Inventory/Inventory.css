@@ -109,3 +109,12 @@
 .badge-success { background: rgba(16,185,129,0.15); color: #10b981; }
 
 .badge-warning { background: rgba(245,158,11,0.15); color: #f59e0b; }
+
+.inv-msg {
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  margin-bottom: 14px;
+}
+.inv-msg-success { background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.2); }
+.inv-msg-error   { background: rgba(239,68,68,0.1);  color: #ef4444; border: 1px solid rgba(239,68,68,0.2); }

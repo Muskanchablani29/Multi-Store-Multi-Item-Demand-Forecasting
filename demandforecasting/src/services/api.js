@@ -2,22 +2,9 @@ import axios from 'axios';
 
 const API = axios.create({ baseURL: 'http://localhost:8000/api' });
 
-API.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
-});
-
 API.interceptors.response.use(
   (res) => res,
   (err) => {
-    if (err.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
-    }
-    // ERR_NETWORK_IO_SUSPENDED — browser bfcache suspended the request.
-    // Attach a human-readable message so UI can show it clearly.
     if (!err.response && err.message === 'Network Error') {
       err.friendlyMessage =
         'Request was interrupted (browser navigation). Please stay on this page while training runs.';

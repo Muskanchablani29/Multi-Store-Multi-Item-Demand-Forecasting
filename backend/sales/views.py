@@ -1,9 +1,11 @@
 import csv
 import io
 import os
+import time
 from datetime import date as date_type
 from django.conf import settings
 from django.http import FileResponse, Http404
+from django.core.cache import cache
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -12,6 +14,9 @@ from .models import Sale
 from .serializers import SaleSerializer
 from shops.models import Shop
 from products.models import Product
+
+STATS_CACHE_KEY = 'dashboard_stats'
+STATS_CACHE_TTL = 300  # 5 minutes
 
 DATASET_FILES = {
     'full':   'thakur_footwear_sales_500k.csv',
@@ -46,11 +51,24 @@ class SaleViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='stats')
     def stats(self, request):
+        # Serve from cache if available (recomputed every 5 min or after upload)
+        cached = cache.get(STATS_CACHE_KEY)
+        if cached:
+            return Response(cached)
+
         qs = Sale.objects.all()
-        total_revenue = qs.aggregate(r=Sum('total_sales'))['r'] or 0
-        total_units = qs.aggregate(u=Sum('quantity'))['u'] or 0
-        total_profit = qs.aggregate(p=Sum('profit'))['p'] or 0
-        total_records = qs.count()
+        # Single aggregate query for all totals
+        totals = qs.aggregate(
+            total_revenue=Sum('total_sales'),
+            total_units=Sum('quantity'),
+            total_profit=Sum('profit'),
+        )
+        total_revenue  = totals['total_revenue'] or 0
+        total_units    = totals['total_units']   or 0
+        total_profit   = totals['total_profit']  or 0
+        total_records  = qs.count()
+        total_shops    = Shop.objects.count()
+        total_products = Product.objects.count()
 
         category_sales = list(
             qs.values('product__category')
@@ -81,19 +99,38 @@ class SaleViewSet(viewsets.ModelViewSet):
             qs.values('promotion')
             .annotate(units=Sum('quantity'), revenue=Sum('total_sales'))
         )
+        # Recent sales — last 10 rows only, never the full table
+        recent_sales = list(
+            qs.select_related('shop', 'product')
+            .order_by('-date', '-id')[:10]
+            .values(
+                'shop__name', 'product__name', 'product__category',
+                'date', 'quantity', 'total_sales'
+            )
+        )
+        for r in recent_sales:
+            r['shop_name']    = r.pop('shop__name')
+            r['product_name'] = r.pop('product__name')
+            r['category']     = r.pop('product__category')
+            r['date']         = str(r['date'])
 
-        return Response({
-            'total_revenue': round(total_revenue, 2),
-            'total_units': round(total_units, 0),
-            'total_profit': round(total_profit, 2),
-            'total_records': total_records,
+        result = {
+            'total_revenue':  round(total_revenue, 2),
+            'total_units':    round(total_units, 0),
+            'total_profit':   round(total_profit, 2),
+            'total_records':  total_records,
+            'total_shops':    total_shops,
+            'total_products': total_products,
             'category_sales': category_sales,
-            'brand_sales': brand_sales,
-            'shop_sales': shop_sales,
-            'top_products': top_products,
-            'season_sales': season_sales,
-            'promo_sales': promo_sales,
-        })
+            'brand_sales':    brand_sales,
+            'shop_sales':     shop_sales,
+            'top_products':   top_products,
+            'season_sales':   season_sales,
+            'promo_sales':    promo_sales,
+            'recent_sales':   recent_sales,
+        }
+        cache.set(STATS_CACHE_KEY, result, STATS_CACHE_TTL)
+        return Response(result)
 
     @action(detail=False, methods=['post'], url_path='upload')
     def upload_csv(self, request):
@@ -223,6 +260,7 @@ class SaleViewSet(viewsets.ModelViewSet):
             except Exception as e:
                 errors.append(f"Row {i}: {str(e)}")
 
+        cache.delete(STATS_CACHE_KEY)  # invalidate dashboard cache after upload
         return Response({'created': created, 'errors': errors[:50]}, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=['get'], url_path='download', permission_classes=[__import__('rest_framework').permissions.AllowAny])
