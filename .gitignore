@@ -18,15 +18,31 @@ backend/uploads/
 uploads/
 
 # ML generated files
-backend/trained_models/*.keras
-backend/trained_models/*.h5
+backend/ml/saved_models/
+*.keras
+*.h5
 *.pkl
+
+# Large CSV datasets (too big for GitHub — generate locally)
+*.csv
+backend/*.csv
 
 # Jupyter
 .ipynb_checkpoints/
 
 # Logs
 *.log
+backend/*.log
+
+# Test/debug scripts
+backend/test_api.py
+backend/test_ml.py
+backend/test_engine.py
+backend/seed_ml.py
+backend/diagnose_ml.py
+backend/token_response.json
+check_weekend.py
+verify_dataset.py
 
 # OS
 .DS_Store

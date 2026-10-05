@@ -7,6 +7,8 @@ class Inventory(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='inventory')
     current_stock = models.FloatField(default=0)
     reorder_point = models.FloatField(default=0)
+    safety_stock = models.FloatField(default=0)
+    lead_time_days = models.IntegerField(default=7)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:

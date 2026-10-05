@@ -8,6 +8,7 @@ import './ForecastHistory.css';
 const columns = [
   { key: 'shop_name', label: 'Shop' },
   { key: 'product_name', label: 'Product' },
+  { key: 'category', label: 'Category' },
   { key: 'model_type', label: 'Model', render: (v) => <span className={`model-badge ${v?.toLowerCase()}`}>{v}</span> },
   { key: 'forecast_date', label: 'Forecast Date' },
   { key: 'predicted_qty', label: 'Predicted Qty', render: (v) => v?.toFixed(2) },
@@ -18,13 +19,20 @@ const columns = [
 export default function ForecastHistory() {
   const [shops, setShops] = useState([]);
   const [products, setProducts] = useState([]);
+  const [allProducts, setAllProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [forecasts, setForecasts] = useState([]);
-  const [filters, setFilters] = useState({ shop_id: '', product_id: '', model_type: '' });
+  const [filters, setFilters] = useState({ shop_id: '', product_id: '', model_type: '', category: '' });
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     shopsAPI.getAll().then((r) => setShops(r.data));
-    productsAPI.getAll().then((r) => setProducts(r.data));
+    productsAPI.getAll().then((r) => {
+      setAllProducts(r.data);
+      setProducts(r.data);
+      const cats = [...new Set(r.data.map((p) => p.category).filter(Boolean))].sort();
+      setCategories(cats);
+    });
     loadForecasts({});
   }, []);
 
@@ -35,8 +43,15 @@ export default function ForecastHistory() {
 
   const handleFilter = (e) => {
     const updated = { ...filters, [e.target.name]: e.target.value };
+    if (e.target.name === 'category') {
+      const filtered = e.target.value
+        ? allProducts.filter((p) => p.category === e.target.value)
+        : allProducts;
+      setProducts(filtered);
+      updated.product_id = '';
+    }
     setFilters(updated);
-    const params = Object.fromEntries(Object.entries(updated).filter(([, v]) => v));
+    const params = Object.fromEntries(Object.entries(updated).filter(([k, v]) => v && k !== 'category'));
     loadForecasts(params);
   };
 
@@ -51,6 +66,10 @@ export default function ForecastHistory() {
         <select name="shop_id" value={filters.shop_id} onChange={handleFilter}>
           <option value="">All Shops</option>
           {shops.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+        </select>
+        <select name="category" value={filters.category} onChange={handleFilter}>
+          <option value="">All Categories</option>
+          {categories.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
         <select name="product_id" value={filters.product_id} onChange={handleFilter}>
           <option value="">All Products</option>

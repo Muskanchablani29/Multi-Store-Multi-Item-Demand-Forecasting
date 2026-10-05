@@ -44,9 +44,12 @@ class TrainModelView(APIView):
 
         return Response({
             'metrics': {'mae': result['mae'], 'mse': result['mse'], 'rmse': result['rmse'], 'r2': result['r2']},
-            'actual': result['actual'],
+            'actual':    result['actual'],
             'predicted': result['predicted'],
-            'dates': result['dates'],
+            'dates':     result['dates'],
+            'train_days': result.get('train_days'),
+            'test_days':  result.get('test_days'),
+            'total_days': result.get('total_days'),
         })
 
 

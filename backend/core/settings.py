@@ -15,6 +15,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
+    'rest_framework_simplejwt',
     'shops',
     'products',
     'sales',
@@ -32,6 +33,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'core.middleware.NoBFCacheMiddleware',
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
@@ -68,6 +70,8 @@ DATABASES = {
 
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': ['rest_framework.renderers.JSONRenderer'],
+    'DEFAULT_AUTHENTICATION_CLASSES': ['rest_framework_simplejwt.authentication.JWTAuthentication'],
+    'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.IsAuthenticated'],
 }
 
 LANGUAGE_CODE = 'en-us'
@@ -78,3 +82,4 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 ML_MODELS_DIR = BASE_DIR / 'ml' / 'saved_models'
+DATASETS_DIR = BASE_DIR

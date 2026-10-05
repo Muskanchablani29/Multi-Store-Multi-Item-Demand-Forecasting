@@ -1,0 +1,40 @@
+.products-toolbar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.search-input {
+  background: #1e2435;
+  border: 1px solid #2d3348;
+  border-radius: 8px;
+  color: #fff;
+  padding: 9px 14px;
+  font-size: 0.875rem;
+  outline: none;
+  flex: 1;
+  min-width: 200px;
+}
+
+.search-input:focus { border-color: #6c63ff; }
+
+.cat-filter {
+  background: #1e2435;
+  border: 1px solid #2d3348;
+  border-radius: 8px;
+  color: #fff;
+  padding: 9px 14px;
+  font-size: 0.875rem;
+  outline: none;
+  min-width: 160px;
+}
+
+.cat-filter:focus { border-color: #6c63ff; }
+
+.result-count {
+  color: #8892a4;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}

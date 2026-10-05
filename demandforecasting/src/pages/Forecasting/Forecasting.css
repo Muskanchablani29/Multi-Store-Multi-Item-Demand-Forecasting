@@ -141,3 +141,110 @@
   .forecasting-layout { grid-template-columns: 1fr; }
   .metrics-grid { grid-template-columns: repeat(2, 1fr); }
 }
+
+.product-info-box {
+  background: #252b3b;
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pi-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+}
+
+.pi-row span { color: #8892a4; }
+.pi-row strong { color: #fff; }
+
+.recommendation-card {
+  background: #1e2435;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid rgba(108,99,255,0.2);
+}
+
+.recommendation-card h3 {
+  color: #fff;
+  margin: 0 0 16px;
+  font-size: 0.95rem;
+}
+
+.rec-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.rec-item {
+  background: #252b3b;
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rec-item span { color: #8892a4; font-size: 0.75rem; text-transform: uppercase; }
+.rec-item strong { color: #fff; font-size: 1rem; font-weight: 700; }
+.rec-item strong.highlight { color: #6c63ff; font-size: 1.1rem; }
+
+.inv-status-badge {
+  display: inline-block;
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.status-sufficient-stock { background: rgba(16,185,129,0.15); color: #10b981; }
+.status-low-stock { background: rgba(245,158,11,0.15); color: #f59e0b; }
+.status-reorder-required { background: rgba(239,68,68,0.15); color: #ef4444; }
+.status-out-of-stock { background: rgba(239,68,68,0.25); color: #ef4444; }
+
+/* Data info box */
+.data-info-box {
+  background: #252b3b;
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  border-left: 3px solid #6c63ff;
+}
+
+.di-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+}
+
+.di-row span  { color: #8892a4; }
+.di-row strong { color: #fff; }
+
+.di-warn {
+  color: #f59e0b;
+  font-size: 0.75rem;
+  margin: 4px 0 0 0;
+}
+
+/* Metrics header with R2 badge */
+.metrics-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.metrics-header .metrics-title { margin: 0; }
+
+.r2-badge {
+  padding: 3px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
