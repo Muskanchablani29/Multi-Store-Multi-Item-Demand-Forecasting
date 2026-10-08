@@ -26,13 +26,14 @@ import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from tensorflow.keras.models import Sequential, load_model
-from tensorflow.keras.layers import LSTM, GRU, Dense, Dropout, BatchNormalization
+from tensorflow.keras.layers import LSTM, GRU, Dense, Dropout, BatchNormalization, Input
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from tensorflow.keras.optimizers import Adam
 
 # ── Hyper-parameters ─────────────────────────────────────────────────────────
 SEQ_LEN    = 30      # days of history per input window
 EPOCHS     = 100
+EPOCHS_FAST = 30     # used during bulk auto-train (months filter active)
 BATCH_SIZE = 32
 
 # ── Encodings ────────────────────────────────────────────────────────────────
@@ -60,11 +61,10 @@ FEATURE_COLS = [
 
 # ── Step 1 : aggregate transactions → daily demand ───────────────────────────
 
-def _aggregate_daily(sales_qs):
+def _aggregate_daily(sales_qs, months=None):
     """
     Sum all transaction rows for the same (shop, product, date) into a single
-    daily demand record.  Returns a DataFrame sorted by date with one row per
-    calendar day that had at least one sale.
+    daily demand record.  If months is given, only use the last N months.
     """
     fields = [
         'date', 'quantity', 'unit_price', 'discount_percent',
@@ -75,6 +75,11 @@ def _aggregate_daily(sales_qs):
 
     if df.empty:
         return df
+
+    if months:
+        df['date'] = pd.to_datetime(df['date'])
+        cutoff = df['date'].max() - pd.DateOffset(months=months)
+        df = df[df['date'] > cutoff].copy()
 
     # Aggregate numeric fields
     agg = df.groupby('date').agg(
@@ -129,13 +134,14 @@ def _make_sequences(scaled, qty_scaled, seq_len):
 
 # ── Step 4 : build model ─────────────────────────────────────────────────────
 
-def build_model(model_type, seq_len, n_features):
-    Layer = LSTM if model_type == 'LSTM' else GRU
+def build_model(seq_len, n_features, model_type='LSTM'):
+    RnnLayer = LSTM if model_type == 'LSTM' else GRU
     model = Sequential([
-        Layer(128, input_shape=(seq_len, n_features), return_sequences=True),
+        Input(shape=(seq_len, n_features)),
+        RnnLayer(128, return_sequences=True),
         BatchNormalization(),
         Dropout(0.2),
-        Layer(64, return_sequences=False),
+        RnnLayer(64, return_sequences=False),
         BatchNormalization(),
         Dropout(0.2),
         Dense(32, activation='relu'),
@@ -147,9 +153,11 @@ def build_model(model_type, seq_len, n_features):
 
 # ── Public API ────────────────────────────────────────────────────────────────
 
-def train_and_evaluate(sales_qs, shop_id, product_id, model_type, models_dir):
-    # 1. Aggregate to daily demand
-    df = _aggregate_daily(sales_qs)
+def train_and_evaluate(sales_qs, shop_id, product_id, model_type='LSTM', models_dir=None, months=None):
+    if models_dir is None:
+        raise ValueError('models_dir is required')
+    # 1. Aggregate to daily demand (optionally last N months)
+    df = _aggregate_daily(sales_qs, months=months)
     if df.empty or len(df) < SEQ_LEN + 10:
         raise ValueError(
             f"Not enough daily data. Need at least {SEQ_LEN + 10} days with sales "
@@ -178,20 +186,21 @@ def train_and_evaluate(sales_qs, shop_id, product_id, model_type, models_dir):
                                         qty_scaled[split - SEQ_LEN:], SEQ_LEN)
 
     # 5. Train
-    model = build_model(model_type, SEQ_LEN, n_features)
+    model = build_model(SEQ_LEN, n_features, model_type)
+    _epochs = EPOCHS if not months else EPOCHS_FAST
     callbacks = [
-        EarlyStopping(monitor='val_loss', patience=10,
+        EarlyStopping(monitor='val_loss', patience=5,
                       restore_best_weights=True, verbose=0),
         ReduceLROnPlateau(monitor='val_loss', factor=0.5,
-                          patience=5, min_lr=1e-6, verbose=0),
+                          patience=3, min_lr=1e-6, verbose=0),
     ]
     model.fit(
         X_train, y_train,
-        epochs=EPOCHS,
+        epochs=_epochs,
         batch_size=BATCH_SIZE,
         validation_split=0.1,
         callbacks=callbacks,
-        verbose=0,
+        verbose=1,
     )
 
     # 6. Save model + scalers
@@ -226,7 +235,7 @@ def train_and_evaluate(sales_qs, shop_id, product_id, model_type, models_dir):
     }
 
 
-def forecast_future(sales_qs, shop_id, product_id, model_type, steps, models_dir):
+def forecast_future(sales_qs, shop_id, product_id, model_type='LSTM', steps=30, models_dir=None, months=None):
     model_path   = os.path.join(models_dir, f"{model_type}_{shop_id}_{product_id}.keras")
     scalers_path = model_path.replace('.keras', '_scalers.pkl')
 
@@ -248,7 +257,7 @@ def forecast_future(sales_qs, shop_id, product_id, model_type, steps, models_dir
 
     model = load_model(model_path)
 
-    # Build the seed window from the last SEQ_LEN daily records
+    # Build the seed window from the last SEQ_LEN daily records (always use full data for latest date)
     df   = _aggregate_daily(sales_qs)
     data = _build_features(df)
 

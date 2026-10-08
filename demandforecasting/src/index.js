@@ -4,6 +4,14 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 
+// Clear stale tokens from old system (no JWT)
+const TOKEN_VERSION = 'v2_jwt';
+if (localStorage.getItem('token_version') !== TOKEN_VERSION) {
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('refresh_token');
+  localStorage.setItem('token_version', TOKEN_VERSION);
+}
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>

@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { shopsAPI, productsAPI, mlAPI, forecastsAPI } from '../../services/api';
-import MetricsComparisonChart from '../../Components/charts/MetricsComparisonChart';
 import ActualVsPredictedChart from '../../Components/charts/ActualVsPredictedChart';
 import DataTable from '../../Components/tables/DataTable';
 import '../../Components/charts/charts.css';
@@ -20,7 +19,7 @@ export default function ModelComparison() {
   const [shops, setShops] = useState([]);
   const [products, setProducts] = useState([]);
   const [form, setForm] = useState({ shop_id: '', product_id: '' });
-  const [results, setResults] = useState({ lstm: null, gru: null });
+  const [result, setResult] = useState(null);
   const [evaluations, setEvaluations] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -33,33 +32,27 @@ export default function ModelComparison() {
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
-  const handleCompare = async () => {
+  const handleEvaluate = async () => {
     if (!form.shop_id || !form.product_id) return;
     setError('');
     setLoading(true);
     try {
-      const [lstmRes, gruRes] = await Promise.all([
-        mlAPI.train({ ...form, model_type: 'LSTM' }),
-        mlAPI.train({ ...form, model_type: 'GRU' }),
-      ]);
-      setResults({ lstm: lstmRes.data, gru: gruRes.data });
+      const res = await mlAPI.train({ ...form, model_type: 'LSTM' });
+      setResult(res.data);
       const evalsRes = await forecastsAPI.getEvaluations({ shop_id: form.shop_id, product_id: form.product_id });
       setEvaluations(evalsRes.data);
     } catch (e) {
-      setError(e.response?.data?.error || 'Comparison failed.');
+      setError(e.response?.data?.error || 'Evaluation failed.');
     } finally {
       setLoading(false);
     }
   };
 
-  const lstmMetrics = results.lstm?.metrics;
-  const gruMetrics = results.gru?.metrics;
-
   return (
     <div className="page">
       <div className="page-header">
-        <h1>Model Comparison</h1>
-        <p>Compare LSTM vs GRU performance on the same shop-product combination</p>
+        <h1>Model Evaluation</h1>
+        <p>Evaluate LSTM model performance for a shop-product combination</p>
       </div>
 
       <div className="comparison-controls">
@@ -71,56 +64,36 @@ export default function ModelComparison() {
           <option value="">Select product...</option>
           {products.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
-        <button className="btn-primary" onClick={handleCompare} disabled={loading || !form.shop_id || !form.product_id}>
-          {loading ? 'Comparing...' : 'Compare Models'}
+        <button className="btn-primary" onClick={handleEvaluate} disabled={loading || !form.shop_id || !form.product_id}>
+          {loading ? 'Evaluating...' : 'Evaluate LSTM'}
         </button>
       </div>
 
       {error && <div className="error-msg">{error}</div>}
 
-      {(lstmMetrics || gruMetrics) && (
+      {result && (
         <>
-          <MetricsComparisonChart lstmMetrics={lstmMetrics} gruMetrics={gruMetrics} />
-
-          <div className="comparison-charts">
-            {results.lstm && (
-              <ActualVsPredictedChart
-                dates={results.lstm.dates}
-                actual={results.lstm.actual}
-                predicted={results.lstm.predicted}
-                title="LSTM — Actual vs Predicted"
-              />
-            )}
-            {results.gru && (
-              <ActualVsPredictedChart
-                dates={results.gru.dates}
-                actual={results.gru.actual}
-                predicted={results.gru.predicted}
-                title="GRU — Actual vs Predicted"
-              />
-            )}
+          <div className="metrics-summary">
+            {['mae', 'mse', 'rmse', 'r2'].map((k) => (
+              <div key={k} className="metric-box">
+                <span>{k.toUpperCase()}</span>
+                <strong>{result.metrics?.[k]?.toFixed(4)}</strong>
+              </div>
+            ))}
           </div>
-
-          <div className="winner-banner">
-            {lstmMetrics && gruMetrics && (() => {
-              const lstmScore = lstmMetrics.rmse;
-              const gruScore = gruMetrics.rmse;
-              const winner = lstmScore < gruScore ? 'LSTM' : 'GRU';
-              const diff = Math.abs(lstmScore - gruScore).toFixed(4);
-              return (
-                <p>
-                  🏆 <strong>{winner}</strong> performs better with a lower RMSE by <strong>{diff}</strong>
-                </p>
-              );
-            })()}
-          </div>
+          <ActualVsPredictedChart
+            dates={result.dates}
+            actual={result.actual}
+            predicted={result.predicted}
+            title="LSTM — Actual vs Predicted"
+          />
         </>
       )}
 
       <div className="section-title-row">
-        <h2 className="section-title">All Evaluations History</h2>
+        <h2 className="section-title">Evaluation History</h2>
       </div>
-      <DataTable columns={evalCols} data={evaluations} emptyMessage="No evaluations yet. Run a comparison." />
+      <DataTable columns={evalCols} data={evaluations} emptyMessage="No evaluations yet. Run an evaluation." />
     </div>
   );
 }

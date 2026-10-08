@@ -1,17 +1,15 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { FiEdit2, FiSave, FiX, FiAlertTriangle, FiPlus } from 'react-icons/fi';
-import { inventoryAPI, shopsAPI, productsAPI } from '../../services/api';
+import { inventoryAPI, productsAPI } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import DataTable from '../../Components/tables/DataTable';
 import './Inventory.css';
 
-const EMPTY_NEW = {
-  shop_id: '', product_id: '', current_stock: '',
-  reorder_point: '', safety_stock: '', lead_time_days: '7',
-};
+const EMPTY_NEW = { product_id: '', current_stock: '', reorder_point: '', safety_stock: '', lead_time_days: '7' };
 
 export default function Inventory() {
+  const { shop } = useAuth();
   const [inventory, setInventory] = useState([]);
-  const [shops, setShops]         = useState([]);
   const [products, setProducts]   = useState([]);
   const [editId, setEditId]       = useState(null);
   const [editData, setEditData]   = useState({});
@@ -23,14 +21,11 @@ export default function Inventory() {
   const [success, setSuccess]     = useState('');
 
   const loadInventory = useCallback(() => {
-    inventoryAPI.getAll()
-      .then((r) => setInventory(r.data))
-      .finally(() => setLoading(false));
+    inventoryAPI.getAll().then((r) => setInventory(r.data)).finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
     loadInventory();
-    shopsAPI.getAll().then((r) => setShops(r.data));
     productsAPI.getAll().then((r) => setProducts(r.data));
   }, [loadInventory]);
 
@@ -46,41 +41,30 @@ export default function Inventory() {
       setEditId(null);
       loadInventory();
       flash('Stock updated.');
-    } catch {
-      flash('Failed to update.', true);
-    } finally {
-      setSaving(false);
-    }
+    } catch { flash('Failed to update.', true); }
+    finally { setSaving(false); }
   };
 
   const handleAdd = async () => {
-    if (!newItem.shop_id || !newItem.product_id) {
-      flash('Select a shop and product.', true);
-      return;
-    }
+    if (!newItem.product_id) { flash('Select a product.', true); return; }
     setSaving(true);
     try {
       await inventoryAPI.create({
-        shop:          newItem.shop_id,
-        product:       newItem.product_id,
-        current_stock: Number(newItem.current_stock)  || 0,
-        reorder_point: Number(newItem.reorder_point)  || 0,
-        safety_stock:  Number(newItem.safety_stock)   || 0,
-        lead_time_days:Number(newItem.lead_time_days) || 7,
+        shop:           shop?.id,
+        product:        newItem.product_id,
+        current_stock:  Number(newItem.current_stock)  || 0,
+        reorder_point:  Number(newItem.reorder_point)  || 0,
+        safety_stock:   Number(newItem.safety_stock)   || 0,
+        lead_time_days: Number(newItem.lead_time_days) || 7,
       });
       setNewItem(EMPTY_NEW);
       loadInventory();
       flash('Inventory item added.');
-    } catch (e) {
-      flash(e.response?.data?.detail || 'Failed to add item.', true);
-    } finally {
-      setSaving(false);
-    }
+    } catch (e) { flash(e.response?.data?.detail || 'Failed to add item.', true); }
+    finally { setSaving(false); }
   };
 
-  const filtered = filter === 'alerts'
-    ? inventory.filter((i) => i.needs_reorder)
-    : inventory;
+  const filtered = filter === 'alerts' ? inventory.filter((i) => i.needs_reorder) : inventory;
 
   const statusColor = (s) => {
     if (s === 'Sufficient Stock') return 'badge-success';
@@ -89,7 +73,6 @@ export default function Inventory() {
   };
 
   const columns = [
-    { key: 'shop_name',    label: 'Shop' },
     { key: 'product_name', label: 'Product' },
     { key: 'category',     label: 'Category' },
     { key: 'brand',        label: 'Brand' },
@@ -133,12 +116,7 @@ export default function Inventory() {
       ) : (
         <button className="icon-btn edit" onClick={() => {
           setEditId(id);
-          setEditData({
-            current_stock:  row.current_stock,
-            reorder_point:  row.reorder_point,
-            safety_stock:   row.safety_stock,
-            lead_time_days: row.lead_time_days,
-          });
+          setEditData({ current_stock: row.current_stock, reorder_point: row.reorder_point, safety_stock: row.safety_stock, lead_time_days: row.lead_time_days });
         }}><FiEdit2 /></button>
       ),
     },
@@ -150,33 +128,25 @@ export default function Inventory() {
     <div className="page">
       <div className="page-header">
         <h1>Inventory Management</h1>
-        <p>Track stock levels, safety stock, and reorder points — {inventory.length} items</p>
+        <p>Track stock levels for {shop?.name} — {inventory.length} items</p>
       </div>
 
       {error   && <div className="inv-msg inv-msg-error">{error}</div>}
       {success && <div className="inv-msg inv-msg-success">{success}</div>}
 
-      {/* Filter tabs */}
       <div className="inventory-toolbar">
         <div className="filter-tabs">
           {['all', 'alerts'].map((f) => (
             <button key={f} className={`tab-btn ${filter === f ? 'active' : ''}`} onClick={() => setFilter(f)}>
-              {f === 'all'
-                ? `All Items (${inventory.length})`
-                : `Reorder Alerts (${inventory.filter(i => i.needs_reorder).length})`}
+              {f === 'all' ? `All Items (${inventory.length})` : `Reorder Alerts (${inventory.filter(i => i.needs_reorder).length})`}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Add form */}
       <div className="add-inventory-form">
         <h3><FiPlus style={{ marginRight: 6 }} />Add Inventory Item</h3>
         <div className="add-form-row">
-          <select value={newItem.shop_id} onChange={(e) => setNewItem({ ...newItem, shop_id: e.target.value })}>
-            <option value="">Select shop...</option>
-            {shops.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-          </select>
           <select value={newItem.product_id} onChange={(e) => setNewItem({ ...newItem, product_id: e.target.value })}>
             <option value="">Select product...</option>
             {products.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}

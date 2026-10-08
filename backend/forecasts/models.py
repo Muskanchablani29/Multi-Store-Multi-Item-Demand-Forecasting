@@ -3,10 +3,9 @@ from shops.models import Shop
 from products.models import Product
 
 class Forecast(models.Model):
-    MODEL_CHOICES = [('LSTM', 'LSTM'), ('GRU', 'GRU')]
     shop = models.ForeignKey(Shop, on_delete=models.CASCADE, related_name='forecasts')
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='forecasts')
-    model_type = models.CharField(max_length=10, choices=MODEL_CHOICES)
+    model_type = models.CharField(max_length=10, default='LSTM')
     forecast_date = models.DateField()
     predicted_qty = models.FloatField()
     actual_qty = models.FloatField(null=True, blank=True)
@@ -16,10 +15,9 @@ class Forecast(models.Model):
         ordering = ['forecast_date']
 
 class ModelEvaluation(models.Model):
-    MODEL_CHOICES = [('LSTM', 'LSTM'), ('GRU', 'GRU')]
     shop = models.ForeignKey(Shop, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    model_type = models.CharField(max_length=10, choices=MODEL_CHOICES)
+    model_type = models.CharField(max_length=10, default='LSTM')
     mae = models.FloatField()
     mse = models.FloatField()
     rmse = models.FloatField()

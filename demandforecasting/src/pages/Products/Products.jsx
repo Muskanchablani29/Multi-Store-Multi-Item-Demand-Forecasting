@@ -5,26 +5,25 @@ import './Products.css';
 
 const columns = [
   { key: 'product_id', label: 'ID' },
-  { key: 'name', label: 'Product Name' },
-  { key: 'category', label: 'Category' },
-  { key: 'subcategory', label: 'Subcategory' },
-  { key: 'brand', label: 'Brand' },
-  { key: 'gender', label: 'Gender' },
-  { key: 'size', label: 'Size' },
-  { key: 'color', label: 'Color' },
-  { key: 'material', label: 'Material' },
-  { key: 'unit_price', label: 'Price', render: (v) => v ? `₹${v}` : '—' },
+  { key: 'name',       label: 'Product Name' },
+  { key: 'category',   label: 'Category' },
+  { key: 'subcategory',label: 'Subcategory' },
+  { key: 'brand',      label: 'Brand' },
+  { key: 'gender',     label: 'Gender' },
+  { key: 'size',       label: 'Size' },
+  { key: 'color',      label: 'Color' },
+  { key: 'unit_price', label: 'Price', render: (v) => v ? `Rs ${v}` : '—' },
   { key: 'supplier_name', label: 'Supplier' },
   { key: 'lead_time_days', label: 'Lead (days)' },
 ];
 
 export default function Products() {
-  const [products, setProducts] = useState([]);
-  const [filtered, setFiltered] = useState([]);
+  const [products, setProducts]   = useState([]);
+  const [filtered, setFiltered]   = useState([]);
   const [categories, setCategories] = useState([]);
-  const [search, setSearch] = useState('');
-  const [category, setCategory] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [search, setSearch]       = useState('');
+  const [category, setCategory]   = useState('');
+  const [loading, setLoading]     = useState(true);
 
   useEffect(() => {
     productsAPI.getAll().then((r) => {
@@ -38,7 +37,7 @@ export default function Products() {
   useEffect(() => {
     let data = products;
     if (category) data = data.filter((p) => p.category === category);
-    if (search) data = data.filter((p) =>
+    if (search)   data = data.filter((p) =>
       p.name?.toLowerCase().includes(search.toLowerCase()) ||
       p.brand?.toLowerCase().includes(search.toLowerCase())
     );
@@ -51,16 +50,12 @@ export default function Products() {
     <div className="page">
       <div className="page-header">
         <h1>Products</h1>
-        <p>Footwear product catalogue — {products.length} products</p>
+        <p>Your shop's product catalogue — {products.length} products</p>
       </div>
 
       <div className="products-toolbar">
-        <input
-          className="search-input"
-          placeholder="Search by name or brand..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+        <input className="search-input" placeholder="Search by name or brand..."
+          value={search} onChange={(e) => setSearch(e.target.value)} />
         <select className="cat-filter" value={category} onChange={(e) => setCategory(e.target.value)}>
           <option value="">All Categories</option>
           {categories.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -68,7 +63,7 @@ export default function Products() {
         <span className="result-count">{filtered.length} results</span>
       </div>
 
-      <DataTable columns={columns} data={filtered} emptyMessage="No products found." />
+      <DataTable columns={columns} data={filtered} emptyMessage="No products found. Upload sales data to populate products." />
     </div>
   );
 }
